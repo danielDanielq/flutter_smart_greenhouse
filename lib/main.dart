@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
 import 'services/tcp_service.dart';
-import 'package:provider/provider.dart';
-import 'services/tcp_service.dart';
+import 'screens/main_screen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => TcpService(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TcpService()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -21,9 +21,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Releu Controller',
+      title: 'ESP Control',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomeScreen(),
+      home: const MainScreen(),
     );
   }
 } 
