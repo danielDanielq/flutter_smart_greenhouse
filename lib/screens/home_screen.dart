@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final conectat = await tcpService.conecteazaESP();
       if (!conectat) return;
 
-      _dataRequestTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _dataRequestTimer = Timer.periodic(const Duration(seconds: 7), (timer) {
         if (tcpService.conectat) {
           tcpService.trimiteComanda("SEND DATA");
         }
