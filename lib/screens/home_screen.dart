@@ -45,10 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       tcpService = Provider.of<TcpService>(context, listen: false);
 
-      // Ascultăm modificările TcpService
       tcpService.addListener(() {
         if (!tcpService.conectat) {
-          // Dacă s-a deconectat, resetăm starea releelor
           if (mounted) {
             setState(() {
               for (int i = 0; i < relee.length; i++) {
@@ -60,6 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       final prefs = PreferencesService();
+
+      // Încarcă starea releelor
+      relee = await prefs.getReleeStates();
+
       _ipController.text = await prefs.getIP() ?? '';
       _tempLateralController.text = (await prefs.getTempLateral()).toStringAsFixed(1);
       _tempVentController.text = (await prefs.getTempVent()).toStringAsFixed(1);
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final conectat = await tcpService.conecteazaESP();
       if (!conectat) return;
 
-      _dataRequestTimer = Timer.periodic(const Duration(seconds: 7), (timer) {
+      _dataRequestTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
         if (tcpService.conectat) {
           tcpService.trimiteComanda("SEND DATA");
         }
@@ -86,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
 
       _loadModAutomat();
+      setState(() {}); // Actualizează UI cu starea releelor încărcate
     });
   }
 
@@ -175,6 +178,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     setState(() => relee[index] = !relee[index]);
+
+    // Salvează starea releelor după ce s-a schimbat
+    final prefs = PreferencesService();
+    await prefs.saveReleeStates(relee);
+
     final comanda = (index == 0 && relee[0])
         ? "ON1:${_debitController.text.trim()}"
         : relee[index] ? "ON${index + 1}" : "OFF${index + 1}";

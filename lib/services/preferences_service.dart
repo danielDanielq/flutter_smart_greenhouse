@@ -7,6 +7,20 @@ class PreferencesService {
   static const String _tempLateralKey = 'temp_lateral';
   static const String _tempVentKey = 'temp_vent';
   static const String _autoKey = 'mod_automat';
+  static const String _releeKey = 'relee_states';
+  
+  Future<void> saveReleeStates(List<bool> states) async {
+    final prefs = await SharedPreferences.getInstance();
+    final stringList = states.map((e) => e ? '1' : '0').toList();
+    await prefs.setStringList(_releeKey, stringList);
+  }
+
+  Future<List<bool>> getReleeStates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stringList = prefs.getStringList(_releeKey);
+    if (stringList == null) return [false, false, false, false];
+    return stringList.map((e) => e == '1').toList();
+  }
 
   Future<void> setAutoMode(bool value) async {
     final prefs = await SharedPreferences.getInstance();
