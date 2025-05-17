@@ -63,4 +63,9 @@ class PreferencesService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(_tempVentKey) ?? 34.0;
   }
+
+  Future<void> setIP(String ip) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_ipKey, ip);
+  }
 }
