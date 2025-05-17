@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 30),
 
             // 🔧 Control relee
-            const Text("Control Relee", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text("Control Seră", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
