@@ -293,10 +293,23 @@ class _HomeScreenState extends State<HomeScreen> {
             SwitchListTile(
               title: const Text("Activează controlul automat"),
               value: _autoMode,
-              onChanged: (val) {
+              onChanged: (val) async {
                 setState(() {
                   _autoMode = val;
                 });
+
+                // Salvează imediat în SharedPreferences
+                final prefs = PreferencesService();
+                await prefs.saveAutoMode(val);
+
+                // Trimite comanda instant către ESP dacă este conectat
+                if (tcpService.conectat) {
+                  tcpService.trimiteComanda("AUTO:${val ? 1 : 0}");
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("❌ Nu ești conectat la ESP")),
+                  );
+                }
               },
             ),
             const SizedBox(height: 10),
