@@ -74,7 +74,7 @@ class TcpService extends ChangeNotifier {
       socket!.write('$comanda\n');
       print("➡️ Trimis: $comanda");
     } else {
-      print("⚠️ Nu ești conectat la ESP.");
+      print("⚠️ Nu ești conectat la Controler.");
     }
   }
 
