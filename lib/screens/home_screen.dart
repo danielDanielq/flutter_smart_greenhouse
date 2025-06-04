@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _autoMode = false;
   bool modAutomatActiv = false;
 
-  double temp1 = 0, temp2 = 0, shtTemp = 0, humidity = 0, soilMoisture = 0, flowRate = 0;
+  double temp1 = 0, temp2 = 0, shtTemp = 0, humidity = 0, soilMoisture = 0, flowRate = 0,  lightLux = 0;
 
   final List<String> denumiri = [
     "Irigare",
@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final linie in linii) {
       final values = linie.trim().split(',');
 
-      if (values.length != 6) continue;
+      if (values.length !=  7) continue;
 
       final t1 = double.tryParse(values[0]);
       final t2 = double.tryParse(values[1]);
@@ -141,8 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final hum = double.tryParse(values[3]);
       final flow = double.tryParse(values[4]);
       final soil = double.tryParse(values[5]);
+      final lux = double.tryParse(values[6]);
 
-      if ([t1, t2, t3, hum, flow, soil].contains(null)) {
+      if ([t1, t2, t3, hum, flow, soil, lux].contains(null)) {
         print("❌ Parsare eșuată: $values");
         continue;
       }
@@ -154,11 +155,34 @@ class _HomeScreenState extends State<HomeScreen> {
         humidity = hum!;
         flowRate = flow!;
         soilMoisture = soil!;
+        lightLux = lux!;
       });
 
-      print("✅ Valori actualizate: $t1, $t2, $t3, $hum, $flow, $soil");
+      if (lux! > 30000) {
+        _arataNotificareLux();
+      }
+
+      print("✅ Valori actualizate: $t1, $t2, $t3, $hum, $flow, $soil, $lux");
       return;
     }
+  }
+
+  void _arataNotificareLux() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("\ud83c\udf1e Nivel de lumin\u0103 ridicat în solar!"),
+        backgroundColor: Colors.amber,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  String interpretareLux(double lux) {
+    if (lux < 6000) return "🌑 Lumină insuficientă";
+    if (lux < 10000) return "🌥️ Lumină slabă";
+    if (lux < 30000) return "🌤️ Lumină optimă pentru plante";
+    if (lux < 45000) return "☀️ Lumină puternică – OK";
+    return "🔥 Lumină excesivă – risc stres termic";
   }
 
   void toggleReleu(int index) async {
@@ -389,6 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
             buildSensorCard("Umiditate Aer", "${humidity.toStringAsFixed(1)}%", Icons.water_drop_outlined, Colors.blue),
             buildSensorCard("Umiditate Sol", "${soilMoisture.toStringAsFixed(0)}%", Icons.grass, Colors.brown),
             buildSensorCard("Debit Irigare", "${flowRate.toStringAsFixed(1)} L/min", Icons.water, Colors.cyan),
+            buildSensorCard("Luminozitate Solar", "${lightLux.toStringAsFixed(0)} lux\n${interpretareLux(lightLux)}", Icons.wb_sunny, Colors.yellow),
           ],
         ),
       ),
