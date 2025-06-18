@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _autoMode = false;
   bool modAutomatActiv = false;
 
-  double temp1 = 0, temp2 = 0, shtTemp = 0, humidity = 0, soilMoisture = 0, flowRate = 0,  lightLux = 0;
+  double temp1 = 0, temp2 = 0, shtTemp = 0, humidity = 0, soilMoisture = 0, flowRate = 0,  lightLux = 0, litriConsumati = 0;
 
   final List<String> denumiri = [
     "Irigare",
@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tcpService.trimiteComanda("SEND DATA");
         }
       });
-
+      
       _reconnectTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
         if (!tcpService.conectat) {
           final ok = await tcpService.conecteazaESP();
@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final linie in linii) {
       final values = linie.trim().split(',');
 
-      if (values.length !=  7) continue;
+      if (values.length !=  8) continue;
 
       final t1 = double.tryParse(values[0]);
       final t2 = double.tryParse(values[1]);
@@ -142,8 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final flow = double.tryParse(values[4]);
       final soil = double.tryParse(values[5]);
       final lux = double.tryParse(values[6]);
+      final litri = double.tryParse(values[7]);
 
-      if ([t1, t2, t3, hum, flow, soil, lux].contains(null)) {
+      if ([t1, t2, t3, hum, flow, soil, lux, litri].contains(null)) {
         print("❌ Parsare eșuată: $values");
         continue;
       }
@@ -156,13 +157,14 @@ class _HomeScreenState extends State<HomeScreen> {
         flowRate = flow!;
         soilMoisture = soil!;
         lightLux = lux!;
+        litriConsumati = litri!;
       });
 
       if (lux! > 30000) {
         _arataNotificareLux();
       }
 
-      print("✅ Valori actualizate: $t1, $t2, $t3, $hum, $flow, $soil, $lux");
+      print("✅ Valori actualizate: $t1, $t2, $t3, $hum, $flow, $soil, $lux, $litri");
       return;
     }
   }
@@ -410,10 +412,34 @@ class _HomeScreenState extends State<HomeScreen> {
             buildSensorCard("Temperatura DS18B20 - Față", "${temp1.toStringAsFixed(1)}°C", Icons.thermostat, Colors.orange),
             buildSensorCard("Temperatura DS18B20 - Spate", "${temp2.toStringAsFixed(1)}°C", Icons.thermostat, Colors.orange),
             buildSensorCard("Temperatura SHT31 - Mijloc", "${shtTemp.toStringAsFixed(1)}°C", Icons.device_thermostat, Colors.redAccent),
+            buildSensorCard("Luminozitate Solar", "${lightLux.toStringAsFixed(0)} lux\n${interpretareLux(lightLux)}", Icons.wb_sunny, Colors.yellow),
             buildSensorCard("Umiditate Aer", "${humidity.toStringAsFixed(1)}%", Icons.water_drop_outlined, Colors.blue),
             buildSensorCard("Umiditate Sol", "${soilMoisture.toStringAsFixed(0)}%", Icons.grass, Colors.brown),
             buildSensorCard("Debit Irigare", "${flowRate.toStringAsFixed(1)} L/min", Icons.water, Colors.cyan),
-            buildSensorCard("Luminozitate Solar", "${lightLux.toStringAsFixed(0)} lux\n${interpretareLux(lightLux)}", Icons.wb_sunny, Colors.yellow),
+            buildSensorCard("Apă consumată", "${litriConsumati.toStringAsFixed(1)} L", Icons.local_drink, Colors.indigo),
+            ElevatedButton.icon(
+              onPressed: () {
+                if (!tcpService.conectat) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("❌ Nu ești conectat la ESP")),
+                  );
+                  return;
+                }
+
+                tcpService.trimiteComanda("RESET_LITRI");
+                setState(() => litriConsumati = 0); // Resetare locală
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("✔️ Contor litri resetat")),
+                );
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text("Resetează contorul de litri"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 45),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ],
         ),
       ),
