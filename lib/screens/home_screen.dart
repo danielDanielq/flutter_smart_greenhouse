@@ -188,6 +188,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void toggleReleu(int index) async {
+    if (_autoMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ Comenzile manuale sunt dezactivate în modul automat")),
+      );
+      return;
+    }
+
     if (!tcpService.conectat) {
       final ok = await tcpService.conecteazaESP();
       if (!ok) return;
@@ -385,12 +392,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
+
+            if (_autoMode)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  "ℹ️ Comenzile manuale sunt dezactivate în modul automat.",
+                  style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+                ),
+              ),
+              
             ...List.generate(4, (index) {
               final activ = relee[index];
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: ElevatedButton.icon(
-                  onPressed: () => toggleReleu(index),
+                  onPressed: _autoMode? null : () => toggleReleu(index),
                   icon: Icon(iconite[index]),
                   label: Text(
                     activ ? "Oprește ${denumiri[index]}" : "Pornește ${denumiri[index]}",
