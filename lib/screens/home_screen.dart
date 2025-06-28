@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _debitController = TextEditingController();
   bool _autoMode = false;
   bool modAutomatActiv = false;
+  bool lateralDeschis = false;
+  bool notificareLuminaTrimisa = false;
+
 
   double temp1 = 0, temp2 = 0, shtTemp = 0, humidity = 0, soilMoisture = 0, flowRate = 0,  lightLux = 0, litriConsumati = 0;
 
@@ -133,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final linie in linii) {
       final values = linie.trim().split(',');
 
-      if (values.length !=  8) continue;
+      if (values.length !=  9) continue;
 
       final t1 = double.tryParse(values[0]);
       final t2 = double.tryParse(values[1]);
@@ -143,6 +146,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final soil = double.tryParse(values[5]);
       final lux = double.tryParse(values[6]);
       final litri = double.tryParse(values[7]);
+      final lateral = int.tryParse(values[8]);
+
+      if (lateral == null) {
+        print("❌ Parsare eșuată pentru lateral: ${values[8]}");
+        continue;
+      }
 
       if ([t1, t2, t3, hum, flow, soil, lux, litri].contains(null)) {
         print("❌ Parsare eșuată: $values");
@@ -158,10 +167,16 @@ class _HomeScreenState extends State<HomeScreen> {
         soilMoisture = soil!;
         lightLux = lux!;
         litriConsumati = litri!;
+        lateralDeschis = lateral == 1;
       });
 
       if (lux! > 30000) {
-        _arataNotificareLux();
+        if (!notificareLuminaTrimisa) {
+          _arataNotificareLux();
+          notificareLuminaTrimisa = true;
+        }
+      } else {
+        notificareLuminaTrimisa = false;
       }
 
       print("✅ Valori actualizate: $t1, $t2, $t3, $hum, $flow, $soil, $lux, $litri");
@@ -377,6 +392,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 30),
 
+            const SizedBox(height: 10),
+            Text("Stare Laterale", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 4,
+              child: ListTile(
+                leading: Icon(
+                  lateralDeschis ? Icons.open_in_new : Icons.close,
+                  color: lateralDeschis ? Colors.green : Colors.red,
+                  size: 30,
+                ),
+                title: Text("Laterale"),
+                subtitle: Text(lateralDeschis ? "Deschise" : "Închise",
+                    style: TextStyle(fontSize: 16)),
+              ),
+            ),
+            const SizedBox(height: 30),
+
             // 🔧 Control relee
             const Text("Control Seră", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
@@ -391,7 +424,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
 
             if (_autoMode)
               const Padding(
@@ -427,10 +459,10 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text("Date Senzori", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             buildSensorCard("Temperatura DS18B20 - Față", "${temp1.toStringAsFixed(1)}°C", Icons.thermostat, Colors.orange),
-            buildSensorCard("Temperatura DS18B20 - Spate", "${temp2.toStringAsFixed(1)}°C", Icons.thermostat, Colors.orange),
             buildSensorCard("Temperatura SHT31 - Mijloc", "${shtTemp.toStringAsFixed(1)}°C", Icons.device_thermostat, Colors.redAccent),
             buildSensorCard("Luminozitate Solar", "${lightLux.toStringAsFixed(0)} lux\n${interpretareLux(lightLux)}", Icons.wb_sunny, Colors.yellow),
             buildSensorCard("Umiditate Aer", "${humidity.toStringAsFixed(1)}%", Icons.water_drop_outlined, Colors.blue),
+            buildSensorCard("Temperatura Sol DS18B20", "${temp2.toStringAsFixed(1)}°C", Icons.thermostat, Colors.orange),
             buildSensorCard("Umiditate Sol", "${soilMoisture.toStringAsFixed(0)}%", Icons.grass, Colors.brown),
             buildSensorCard("Debit Irigare", "${flowRate.toStringAsFixed(1)} L/min", Icons.water, Colors.cyan),
             buildSensorCard("Apă consumată", "${litriConsumati.toStringAsFixed(1)} L", Icons.local_drink, Colors.indigo),
